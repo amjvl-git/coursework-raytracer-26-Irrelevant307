@@ -36,14 +36,24 @@ class Sphere
 
 
     rayIntersects(ray){
-        let a = ray.direction + ray.direction;
-        let b = ray.direction*2 + (ray.origin - this.centre)
-        let c = ((ray.origin - this.centre) + (ray.origin - this.centre)) - this.radius**2
         
-        let result = (-b - Math.sqrt(b**2 - 4*a*c)) / (2*a)
-        if (result <= 0 ){
+        let raydir = new Vec3(ray.direction.x, ray.direction.y, ray.direction.z)
+        let rayori = new Vec3(ray.origin.x, ray.origin.y, ray.origin.z)
+        let spherecent = new Vec3(this.centre.x, this.centre.y, this.centre.z)
+
+
+        let a = raydir.dot(raydir)
+        let b = raydir.dot(rayori.minus(spherecent)) * 2
+        let c = ((rayori.minus(spherecent)).dot(rayori.minus(spherecent))) - this.radius**2
+        
+        let disciminant = (b*b) - (4*a*c)
+        if (disciminant <= 0 ){
             return -1
         }
+        
+        let result = (-b - Math.sqrt(b**2 - 4*a*c)) / (2*a)
+        
+
         return result;
     }
 }

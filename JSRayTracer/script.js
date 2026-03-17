@@ -1,5 +1,8 @@
 
 
+let lightdirection = new Vec3(-1.1,-1.3,-1.5).normalised();
+let neglightdirection = new Vec3(-lightdirection.x, -lightdirection.y, -lightdirection.z)
+
 let colour =  new Vec3(0,0,0);
 
 let imagewidth = document.getElementById("mycanvas").width;
@@ -22,7 +25,7 @@ const spheres = new Array(
     new Sphere(new Vec3(0,-100.5,-1), 100, new Vec3(0,1,0))   // Big green sphere
 );
 
-for(let i = 0; i < imagewidth; i++)
+for(let i = 0; i < imagewidth; i++) 
 {
     for(let j = 0; j <= imageheight; j++)
     {
@@ -31,7 +34,8 @@ for(let i = 0; i < imagewidth; i++)
         
         let ray = new Ray(camposition, lowerleftcorner.add(horizontal.scale(u)).add(vertical.scale(v)).minus(camposition))
         colour = rayColour(ray)
-        setpixel(i,j,colour);
+        
+        setpixel(i,j,colour.scale(255));
     }  
 }
 
@@ -42,6 +46,7 @@ function hit(ray, t, sphereIndex)
 { 
     let intersectionPoint = new Vec3(ray.PointAt(t));
     let intersectionNormal = intersectionPoint.minus(spheres[sphereIndex].centre).normalised()
+    console.log(ray.PointAt(t))
     return new RayCastResult(intersectionPoint, intersectionNormal, t, sphereIndex)
 }
 
@@ -56,6 +61,7 @@ function traceRay(ray)
 {
     let sphere = spheres[0]
     let t = sphere.rayIntersects(ray)
+    
     if(t<0)
     {
         return miss()
@@ -68,9 +74,11 @@ function traceRay(ray)
 // Calculate and return the background colour based on the ray
 function backgroundColour(ray)
 {
+    
     let white = new Vec3(1,1,1)
     let blue = new Vec3(0.3,0.5,0.9)
     let t = 0.5 *(ray.direction.y + 1.0)
+    
     return white.scale(1-t).add(blue.scale(t)) // Blue
 }
 
@@ -78,8 +86,16 @@ function backgroundColour(ray)
 function rayColour(ray) 
 {   
     let castResult = traceRay(ray)
-    if(castResult.t < 0) return backgroundColour(ray)
-    return new Vec3(1,0,0).scale(255)
+    
+    if(castResult.t < 0) {return backgroundColour(ray)}
+
+    let albedo = spheres[castResult.sphereIndex].colour
+    let diffuse = Math.max(castResult.normal.dot(neglightdirection), 0)
+    let colour = albedo.scale(diffuse)
+    
+    return colour
+    //return castResult.normal
+    
 }
 
 // Sets a pixel at (x, y) in the canvas with an RGB Vec3
