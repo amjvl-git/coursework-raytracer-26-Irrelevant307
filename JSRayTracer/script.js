@@ -1,33 +1,99 @@
 
 
-let colour = new Vec3(0,0,0);
-document.addEventListener("DOMContentLoaded", () => {
-    let imagewidth = document.getElementById(mycanvas).width;
-    let imageheight = document.getElementById(mycanvas).height;
-});
+let colour =  new Vec3(0,0,0);
 
-
+let imagewidth = document.getElementById("mycanvas").width;
+let imageheight = document.getElementById("mycanvas").height;
 let aspectratio = imageheight / imagewidth
 
-class Ray{
-    constructor(origin, direction){
-        this.origin = origin
-        this.direction = direction
-    }
+let viewportWidth = 2;
+let ViewportHeight = viewportWidth * aspectratio
 
-    PointAt(t){
-        return (this.origin + (this.direction * t))
-    }
-}
+let focallength = 1.0
+let camposition = new Vec3(0,0,0)
+let horizontal = new Vec3(viewportWidth, 0, 0)
+let vertical = new Vec3(0, ViewportHeight, 0)
 
-for(let i = 0; 1 <= imagewidth; i++){
-    for(let j = 0; 1 <= imageheight; j++){
+let lowerleftcorner = camposition.minus(horizontal.scale(0.5)).minus(vertical.scale(0.5)).minus(new Vec3(0,0, focallength))
+
+const spheres = new Array(
+    new Sphere(new Vec3(0,0,-1), 0.3, new Vec3(1,0,0)),       // Red sphere
+    new Sphere(new Vec3(0,0.2,-0.8), 0.15, new Vec3(0,0,1)),  // Blue sphere
+    new Sphere(new Vec3(0,-100.5,-1), 100, new Vec3(0,1,0))   // Big green sphere
+);
+
+for(let i = 0; i < imagewidth; i++)
+{
+    for(let j = 0; j <= imageheight; j++)
+    {
         let u = i / (imagewidth-1);
-        let v = i / (imagewidth-1);
-
-        colour.x - u * 255;
-        colour.y - v * 255;
+        let v = j / (imageheight-1);
+        
+        let ray = new Ray(camposition, lowerleftcorner.add(horizontal.scale(u)).add(vertical.scale(v)).minus(camposition))
+        colour = rayColour(ray)
         setpixel(i,j,colour);
     }  
 }
+
+
+
+// Calculate the intersection point and normal when a ray hits a sphere. Returns a RayCastResult. 
+function hit(ray, t, sphereIndex)
+{ 
+    let intersectionPoint = new Vec3(ray.PointAt(t));
+    let intersectionNormal = intersectionPoint.minus(spheres[sphereIndex].centre).normalised()
+    return new RayCastResult(intersectionPoint, intersectionNormal, t, sphereIndex)
+}
+
+// Return a RayCastResult when a ray misses everything in the scene
+function miss()
+{
+    return new RayCastResult(new Vec3(0,0,0), new Vec3(0,0,0), -1, -1)
+}
+
+// Check whether a ray hits anything in the scene and return a RayCast Result
+function traceRay(ray)
+{
+    let sphere = spheres[0]
+    let t = sphere.rayIntersects(ray)
+    if(t<0)
+    {
+        return miss()
+    }
+    else 
+        return hit(ray,t,0)
+
+}
+
+// Calculate and return the background colour based on the ray
+function backgroundColour(ray)
+{
+    let white = new Vec3(1,1,1)
+    let blue = new Vec3(0.3,0.5,0.9)
+    let t = 0.5 *(ray.direction.y + 1.0)
+    return white.scale(1-t).add(blue.scale(t)) // Blue
+}
+
+// Returns the colour the ray should have as a Vec3 with RGB values in [0,1]
+function rayColour(ray) 
+{   
+    let castResult = traceRay(ray)
+    if(castResult.t < 0) return backgroundColour(ray)
+    return new Vec3(1,0,0).scale(255)
+}
+
+// Sets a pixel at (x, y) in the canvas with an RGB Vec3
+function setpixel(x, y, colour)
+{
+    var c = document.getElementById("mycanvas")
+    var ctx = c.getContext("2d")
+    
+    ctx.fillStyle = "rgba("+colour.x+","+colour.y+","+colour.z+","+1+")"
+    ctx.fillRect(x, c.height - y, 1, 1)
+}
+
+
+
+
+
 
