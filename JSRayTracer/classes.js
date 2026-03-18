@@ -5,7 +5,8 @@ class Ray{
     }
 
     PointAt(t){
-        return (this.origin + (this.direction * t))
+        let a = this.origin.add((this.direction.scale(t)))
+        return new Vec3(a.x, a.y, a.z) 
     }
 }
 

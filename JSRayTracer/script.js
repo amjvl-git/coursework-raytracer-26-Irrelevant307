@@ -44,9 +44,9 @@ for(let i = 0; i < imagewidth; i++)
 // Calculate the intersection point and normal when a ray hits a sphere. Returns a RayCastResult. 
 function hit(ray, t, sphereIndex)
 { 
-    let intersectionPoint = new Vec3(ray.PointAt(t));
+    let intersectionPoint = (ray.PointAt(t));
     let intersectionNormal = intersectionPoint.minus(spheres[sphereIndex].centre).normalised()
-    console.log(ray.PointAt(t))
+    
     return new RayCastResult(intersectionPoint, intersectionNormal, t, sphereIndex)
 }
 
@@ -59,16 +59,25 @@ function miss()
 // Check whether a ray hits anything in the scene and return a RayCast Result
 function traceRay(ray)
 {
-    let sphere = spheres[0]
-    let t = sphere.rayIntersects(ray)
-    
-    if(t<0)
-    {
-        return miss()
-    }
-    else 
-        return hit(ray,t,0)
+    let t = 100000;
+    let closestsphereindex = -1
 
+    for(let i =0 ; i< spheres.length; i++){
+        let sphere = spheres[i]
+        let current_t = sphere.rayIntersects(ray)
+    
+        if(current_t>=0 && current_t < t)
+        {
+            t = current_t
+            closestsphereindex = i
+            
+        }
+    }
+
+    if (closestsphereindex <0) return miss()
+
+    
+    return hit(ray,t,closestsphereindex)
 }
 
 // Calculate and return the background colour based on the ray
